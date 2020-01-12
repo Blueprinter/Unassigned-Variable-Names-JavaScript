@@ -1,0 +1,127 @@
+function fnkToTest_() {
+  var a,b,c;
+  var j="nothing",k,l = 99;
+  
+  /* This is the function that the code is processing to get the variable names
+     and determine if any of them are unassigned
+  
+  */
+  
+  var x = 0;
+  console.log(x);
+  var ldkfueoifj
+  
+  ldkfueoifj = 99
+  //This is, a , comment,
+  
+  for (var i=0;i<88;i++) {
+    Logger.log(i)
+    
+  }
+};
+
+function variablesUnassigned_(po) {
+  var i,L,thisVar;
+  var arrNoAssign,dxAssign,re,srch;
+  
+  /*
+    po.fncAsString - the function as a string
+    po.arrOfVarNames - an array of all the variable names
+  
+  */
+  
+  /*  This fnc searches the fnc as a string for any variable names that have never been
+      assigned a value
+  */
+  
+  L = po.arrOfVarNames.length;
+  
+  arrNoAssign = [];//Array to get any var names that have never been assigned a value
+  
+  for (i=0;i<L;i++) {
+    thisVar = po.arrOfVarNames[i];
+    
+    srch = thisVar + " =|" + thisVar + "=";//String for Reg Exp - search for either/or var= or var =
+    //Logger.log('srch: ' + srch)
+    
+    re = new RegExp(srch);
+    
+    dxAssign = po.fncAsString.search(re);
+    
+    //Logger.log('dxAssign: ' + dxAssign)
+    
+    if (dxAssign === -1) {
+      arrNoAssign.push(thisVar)
+    }
+  }
+  
+  //Logger.log(arrNoAssign)
+  
+  return arrNoAssign;
+}
+
+function getAllVariableNamesOutOfFnk_(fncAsString) {
+  var allVars,arr,arrAllVarNames,dxEqual,i,L,splitArr,thisVar;
+  //Logger.log('fncAsString ' + fncAsString)
+  
+  arr = fncAsString.split("var ");//Split the string on the var key word
+  arr.shift();//Remove the first element which will never have a var name in it
+  
+  //Logger.log(JSON.stringify(arr))
+  L = arr.length;
+  //Logger.log('L ' + L)
+  
+  allVars = [];//The array for all the array names
+  
+  for (i=0;i<L;i++) {
+    //Logger.log(arr[i])
+    
+    thisVar = arr[i];
+    thisVar = thisVar.slice(0,thisVar.indexOf(";"));
+    //Logger.log(thisVar)
+    
+    splitArr = thisVar.split(",");
+    //Logger.log(thisVar)
+    
+    if (Array.isArray(splitArr)) {
+      allVars = allVars.concat(splitArr);
+    } else {
+      allVars.push(thisVar)
+    }
+  }
+  
+  L = allVars.length;
+  arrAllVarNames = [];
+  
+  for (i=0;i<L;i++) {
+    //Logger.log(arr[i])
+    
+    thisVar = allVars[i];
+    dxEqual = thisVar.indexOf("=");
+
+    if (dxEqual !== -1) {
+      thisVar = thisVar.slice(0,dxEqual - 1);
+    }
+    //Logger.log('thisVar: ' + thisVar)
+    
+    arrAllVarNames.push(thisVar)
+  }
+  
+  //Logger.log('allVars: ' + JSON.stringify(arrAllVarNames))
+  
+  return arrAllVarNames;
+}
+
+function getAnyUnassignedVariableNames() {
+  var allUnassignedVarNames,arrAllVarNames,fncAsString;
+
+  fncAsString = fnkToTest_ + '';//Convert the fnc to a string - The fnc name can not be a string
+  //Logger.log('fncAsString: ' + fncAsString)
+  
+  arrAllVarNames = getAllVariableNamesOutOfFnk_(fncAsString);
+  //Logger.log('arrAllVarNames: ' + arrAllVarNames)
+  
+  allUnassignedVarNames = variablesUnassigned_({arrOfVarNames:arrAllVarNames,fncAsString:fncAsString});
+  
+  //Logger.log('allUnassignedVarNames: ' + allUnassignedVarNames)
+}
