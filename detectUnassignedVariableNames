@@ -1,15 +1,22 @@
 function fnkToTest_() {
   var a,b,c;
   var j="nothing",k,l = 99;
+  var propertyName;
   
   /* This is the function that the code is processing to get the variable names
      and determine if any of them are unassigned
   
   */
+  var name = propertyName + Utilities.formatDate(lastMonth,"PST", "MMM");
   
   var x = 0;
   console.log(x);
   var ldkfueoifj
+  
+  for (k in obj) {
+    //code here
+    
+  }
   
   ldkfueoifj = 99
   //This is, a , comment,
@@ -21,8 +28,7 @@ function fnkToTest_() {
 };
 
 function variablesUnassigned_(po) {
-  var i,L,thisVar;
-  var arrNoAssign,dxAssign,re,srch;
+  var arrNoAssign,dxAssign,i,L,re,srch,thisVar;
   
   /*
     po.fncAsString - the function as a string
@@ -40,48 +46,78 @@ function variablesUnassigned_(po) {
   
   for (i=0;i<L;i++) {
     thisVar = po.arrOfVarNames[i];
+    //ll('thisVar 110',thisVar)
+
+    if (!thisVar) {
+      continue;
+    }
+    
+    if (po.fncAsString.indexOf(thisVar + " in ") !== -1) {//This variable name is in a FOR loop to interate and obj
+      continue;
+    }
     
     srch = thisVar + " =|" + thisVar + "=";//String for Reg Exp - search for either/or var= or var =
-    //Logger.log('srch: ' + srch)
+    //ll('srch 117',srch)
     
-    re = new RegExp(srch);
+    try{
+      re = new RegExp(srch);
+    }catch(e){
+      errHndl_(e,'The search string for the reg exp has a problem: ' + srch)
+      continue;
+    }
     
     dxAssign = po.fncAsString.search(re);
-    
-    //Logger.log('dxAssign: ' + dxAssign)
+    //ll('dxAssign: ,dxAssign)
     
     if (dxAssign === -1) {
       arrNoAssign.push(thisVar)
     }
+    
+
   }
   
-  //Logger.log(arrNoAssign)
+  //ll(arrNoAssign)
   
-  return arrNoAssign;
+  return arrNoAssign.length > 0 ? arrNoAssign : false;
 }
 
 function getAllVariableNamesOutOfFnk_(fncAsString) {
-  var allVars,arr,arrAllVarNames,dxEqual,i,L,splitArr,thisVar;
-  //Logger.log('fncAsString ' + fncAsString)
+  var allVars,arr,arrAllVarNames,dxEqual,dxIn,i,L,splitArr,thisVar;
+  //ll('fncAsString ,fncAsString)
   
   arr = fncAsString.split("var ");//Split the string on the var key word
   arr.shift();//Remove the first element which will never have a var name in it
   
-  //Logger.log(JSON.stringify(arr))
+  //ll('arr 167',arr)
   L = arr.length;
-  //Logger.log('L ' + L)
+  //ll('L 169',L)
   
   allVars = [];//The array for all the array names
   
   for (i=0;i<L;i++) {
-    //Logger.log(arr[i])
-    
     thisVar = arr[i];
+    //ll('thisVar 175',thisVar)
+    
+    dxIn = thisVar.indexOf(" in ");//Look for the in key word in a FOR loop definition - the comments
+    //should have been already removed at this point so there wont be any false finding in a comment
+    //ll('dxIn 178',dxIn)
+    
+    if (dxIn !== -1) {//This is the FOR loop defintion where the var doesnt have an assignment operator
+      continue;
+    }
+    
     thisVar = thisVar.slice(0,thisVar.indexOf(";"));
-    //Logger.log(thisVar)
+    //ll('thisVar 185',thisVar)
+    
+    thisVar = thisVar.replace(/\n/g,"");//Remove all newline codes
+    //ll('thisVar 188',thisVar)
+    thisVar = thisVar.replace(/\s/g,"");//Remove all spaces
+    //ll('thisVar 190',thisVar)
+    
+    //Example:  o={paid:true,}returno[k]
     
     splitArr = thisVar.split(",");
-    //Logger.log(thisVar)
+    //ll('splitArr 195',splitArr)
     
     if (Array.isArray(splitArr)) {
       allVars = allVars.concat(splitArr);
@@ -89,28 +125,44 @@ function getAllVariableNamesOutOfFnk_(fncAsString) {
       allVars.push(thisVar)
     }
   }
-  
+ 
   L = allVars.length;
   arrAllVarNames = [];
   
   for (i=0;i<L;i++) {
-    //Logger.log(arr[i])
-    
     thisVar = allVars[i];
-    dxEqual = thisVar.indexOf("=");
+    //ll('thisVar 209',thisVar)
+    dxEqual = thisVar.indexOf("=");//All spaces were removed in the code above
 
     if (dxEqual !== -1) {
-      thisVar = thisVar.slice(0,dxEqual - 1);
+      thisVar = thisVar.slice(0,dxEqual);
+    } else {
+
+      //ll('splitArr[j].search(re)',thisVar.search(/\W/));//Find non Word characters - spaces have already been removed so it wont match spaces
+      
+      if (thisVar.search(/\W/) !== -1) {//This can not be a variable name because it has a a non word character - note
+        //that numbers are considered word characters which are valid in an var name so its okay
+        continue;
+      }
     }
-    //Logger.log('thisVar: ' + thisVar)
+    
+    if (thisVar.toUpperCase() === thisVar) {//If the letters in the var name are all upper case then its a global so
+      //dont include it
+      if (thisVar.length > 3) {//I always use an upper case L for length and dont want to exclude that
+        //In other words I want the code to INCLUDE vars with all caps that are 3 characters or less
+        //ll('dont include',thisVar)
+        continue;
+      }
+    }
     
     arrAllVarNames.push(thisVar)
   }
   
-  //Logger.log('allVars: ' + JSON.stringify(arrAllVarNames))
+  //ll('allVars 227',arrAllVarNames)
   
   return arrAllVarNames;
 }
+
 
 function getAnyUnassignedVariableNames() {
   var allUnassignedVarNames,arrAllVarNames,fncAsString;
